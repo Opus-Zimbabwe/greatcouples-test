@@ -1,3 +1,4 @@
+import { posterDataUrl } from "@/lib/poster-image";
 import { AdminExperience } from "@/components/site/AdminExperience";
 import "@/components/site/admin-workspace.css";
 import { AdminBooks } from "@/components/site/AdminBooks";
@@ -39,6 +40,7 @@ import {
   type GalleryImage,
 } from "@/lib/db";
 import {
+  extractAnnouncementPoster,
   verifySiteAdminPasscode,
   saveGalleryImage,
   deleteGalleryImage,
@@ -749,10 +751,47 @@ function AnnouncementModal({
     }, 700);
     return () => window.clearTimeout(timer);
   }, [form, draftKey, savedDraft]);
+  const readPoster = useServerFn(extractAnnouncementPoster);
+  const passcode = usePasscode();
+  const [reading, setReading] = useState(false);
+  const [readingStatus, setReadingStatus] = useState("");
+  const uploadAndRead = async (file: File) => {
+    setReading(true);
+    setReadingStatus("Uploading and reading poster…");
+    try {
+      const path = await onUpload(file);
+      setForm((current) => ({ ...current, image_url: path }));
+      try {
+        const fields = await readPoster({
+          data: { passcode, data_url: await posterDataUrl(file) },
+        });
+        setForm((current) => {
+          const next = { ...current, image_url: path };
+          for (const key of ["title", "date_text", "location", "body"] as const) {
+            if (!current[key]?.trim()) next[key] = fields[key];
+          }
+          return next;
+        });
+        setReadingStatus(
+          "Poster read. Empty fields filled; existing text preserved. Review all details before publishing.",
+        );
+      } catch (error) {
+        setReadingStatus(
+          error instanceof Error
+            ? error.message
+            : "Image uploaded. Reading failed; enter the details manually.",
+        );
+      }
+      return path;
+    } finally {
+      setReading(false);
+    }
+  };
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (reading) return;
     setBusy(true);
     setError("");
     try {
@@ -777,7 +816,7 @@ function AnnouncementModal({
     <Dialog.Root
       open
       onOpenChange={(open) => {
-        if (!open && !busy) onClose();
+        if (!open && !busy && !reading) onClose();
       }}
     >
       <Dialog.Portal>
@@ -809,7 +848,7 @@ function AnnouncementModal({
               <button
                 type="button"
                 onClick={onClose}
-                disabled={busy}
+                disabled={busy || reading}
                 aria-label="Close"
                 className="grid h-9 w-9 place-items-center rounded-full bg-muted text-primary"
               >
@@ -918,9 +957,17 @@ function AnnouncementModal({
                       label="Announcement image"
                       bucket="announcements"
                       value={form.image_url || ""}
-                      onChange={(value) => setForm({ ...form, image_url: value })}
-                      onUpload={onUpload}
+                      onChange={(value) => setForm((current) => ({ ...current, image_url: value }))}
+                      onUpload={uploadAndRead}
                     />
+                    <p
+                      role="status"
+                      aria-live="polite"
+                      className="mt-2 text-sm text-muted-foreground"
+                    >
+                      {readingStatus ||
+                        "Upload a poster to fill empty title, date/time, location and body fields. Review before publishing."}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -977,13 +1024,13 @@ function AnnouncementModal({
               <button
                 type="button"
                 onClick={onClose}
-                disabled={busy}
+                disabled={busy || reading}
                 className="rounded-full border border-primary/10 px-4 py-2.5 text-xs font-bold text-primary"
               >
                 Cancel
               </button>
               <button
-                disabled={busy}
+                disabled={busy || reading}
                 className="inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-xs font-bold text-accent-foreground disabled:opacity-60"
               >
                 {busy && <Loader2 className="h-3.5 w-3.5 animate-spin" />}

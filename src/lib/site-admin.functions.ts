@@ -260,3 +260,29 @@ export const saveSiteExperience = createServerFn({ method: "POST" })
     clearExperienceCache();
     return { ok: true };
   });
+
+// Protected AI calls: authenticate before spending provider credits.
+const posterRequests = new Map<string, number[]>();
+export const extractAnnouncementPoster = createServerFn({ method: "POST" })
+  .inputValidator((d) =>
+    z.object({ passcode: z.string().max(256), data_url: z.string().max(2800000) }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    await assertPasscode(data.passcode);
+    const { createHash } = await import("node:crypto");
+    const identity = createHash("sha256").update(data.passcode).digest("hex");
+    const now = Date.now();
+    const recent = (posterRequests.get(identity) || []).filter((time) => now - time < 60000);
+    if (recent.length >= 6) throw new Error("Please wait a minute before reading another poster.");
+    posterRequests.set(identity, [...recent, now]);
+    const { extractPoster } = await import("./announcement-extraction.server");
+    try {
+      return await extractPoster(data.data_url);
+    } catch (error) {
+      if (error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError"))
+        throw new Error(
+          "Image reading timed out. Your image is uploaded; try again or enter the details manually.",
+        );
+      throw error;
+    }
+  });
