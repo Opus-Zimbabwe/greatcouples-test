@@ -773,7 +773,9 @@ function AnnouncementModal({
           return next;
         });
         setReadingStatus(
-          "Poster read. Empty fields filled; existing text preserved. Review all details before publishing.",
+          fields.review_notes.length
+            ? `Review needed: ${fields.review_notes.join(" ")} Other empty fields filled; existing text preserved.`
+            : "Poster interpreted. Event headline and supporting details arranged into empty fields; existing text preserved. Review before publishing.",
         );
       } catch (error) {
         setReadingStatus(
