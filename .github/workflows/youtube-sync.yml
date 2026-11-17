@@ -13,12 +13,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: main
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
-          node-version: 22
+          node-version: 24
+      - name: Diagnose public video sources
+        if: github.event_name == 'workflow_dispatch'
+        run: node scripts/check-video-sources.mjs
       - run: node scripts/sync-youtube.mjs
         env:
           YOUTUBE_CHANNEL_ID: ${{ vars.YOUTUBE_CHANNEL_ID }}

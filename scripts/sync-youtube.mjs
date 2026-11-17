@@ -6,4 +6,4 @@ try {
   const channelId = process.env.YOUTUBE_CHANNEL_ID || previous.channelId;
   const snapshot = mergeYouTubeSnapshots(previous, await fetchYouTubeFeed(channelId ? {channelId} : {}));
   if (JSON.stringify(previous.videos) !== JSON.stringify(snapshot.videos) || previous.channelId !== snapshot.channelId) {await writeFile(file,JSON.stringify(snapshot,null,2)+'\n'); console.log(`Updated ${snapshot.videos.length} YouTube videos.`);} else console.log('YouTube videos are up to date.');
-} catch (error) {console.error(`YouTube sync failed; existing videos were retained. ${error.message}`);process.exitCode=1;}
+} catch (error) {console.error(`YouTube sync failed; existing videos were retained. ${error.message}`);if (process.env.GITHUB_ACTIONS) console.error(`::error title=YouTube feed update failed::${error.message.replaceAll('%','%25').replaceAll('\r','%0D').replaceAll('\n','%0A')}`);process.exitCode=1;}
