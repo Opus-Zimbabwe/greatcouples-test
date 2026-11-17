@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useInView, useReducedMotion } from "framer-motion";
+import { useInView } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getTikTokPreview } from "@/lib/tiktok-preview.functions";
@@ -16,7 +16,14 @@ export function MediaArtwork({
   const container = useRef<HTMLDivElement>(null);
   const near = useInView(container, { margin: "600px", once: true });
   const visible = useInView(container, { margin: "100px 0px", amount: 0.15 });
-  const reducedMotion = useReducedMotion();
+  const [reducedMotion, setReducedMotion] = useState(true);
+  useEffect(() => {
+    const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setReducedMotion(preference.matches);
+    update();
+    preference.addEventListener("change", update);
+    return () => preference.removeEventListener("change", update);
+  }, []);
   const [dataSaving, setDataSaving] = useState(true);
   useEffect(() => {
     const connection = (
