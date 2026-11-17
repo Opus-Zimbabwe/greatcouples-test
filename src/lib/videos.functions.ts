@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import snapshot from "@/data/youtube-feed.json";
-import type { VideoRecord } from "./video-library";
+import { videoStorageStatus, type VideoRecord } from "./video-library";
 import type { YouTubeSnapshot } from "./youtube-feed.mjs";
 let cached: YouTubeSnapshot | null = null;
 let retryAfter = 0;
@@ -37,9 +37,17 @@ export const getVideoLibrary = createServerFn({ method: "GET" }).handler(async (
         .select("*")
         .order("sort_order")
         .abortSignal(AbortSignal.timeout(5000));
-      return { records: (data || []) as unknown as VideoRecord[], storageAvailable: !error };
+      return {
+        records: (data || []) as unknown as VideoRecord[],
+        storageAvailable: !error,
+        storageStatus: videoStorageStatus(error),
+      };
     } catch {
-      return { records: [] as VideoRecord[], storageAvailable: false };
+      return {
+        records: [] as VideoRecord[],
+        storageAvailable: false,
+        storageStatus: "unavailable" as const,
+      };
     }
   })();
   const [storage, live] = await Promise.all([recordsPromise, youtubeFeed()]);

@@ -114,10 +114,15 @@ export function AdminVideos() {
       </div>
       {data && !data.storageAvailable && (
         <div role="status" className="gc-admin-video-warning">
-          <strong>One-time database setup required</strong>
+          <strong>
+            {data.storageStatus === "setup_required"
+              ? "Video storage needs activation in Lovable Cloud"
+              : "Video publishing is unavailable"}
+          </strong>
           <p>
-            Apply the content_videos migration in Supabase to enable publishing. You can explore the
-            library and prepare a draft now; publishing stays disabled until setup is complete.
+            {data.storageStatus === "setup_required"
+              ? "The website database exists, but its video-publishing feature has not been activated. Apply the supplied activation SQL in Lovable Cloud, then recheck setup."
+              : "The database connection or read permissions could not be verified. Retry the status check; your device drafts remain available."}
           </p>
           <button onClick={() => refetch()}>Recheck setup</button>
         </div>
@@ -230,6 +235,7 @@ export function AdminVideos() {
         <VideoEditor
           initial={editing}
           available={!!data?.storageAvailable}
+          setupRequired={data?.storageStatus === "setup_required"}
           busy={busy}
           error={error}
           onClose={() => {
@@ -253,6 +259,7 @@ export function AdminVideos() {
 function VideoEditor({
   initial,
   available,
+  setupRequired,
   busy,
   error,
   onClose,
@@ -260,6 +267,7 @@ function VideoEditor({
 }: {
   initial: Draft;
   available: boolean;
+  setupRequired: boolean;
   busy: boolean;
   error: string;
   onClose: () => void;
@@ -438,8 +446,10 @@ function VideoEditor({
             )}
             {!available && (
               <p className="gc-admin-video-warning">
-                Publishing will be available after the database setup. Your draft is saved on this
-                device.
+                {setupRequired
+                  ? "Video publishing needs activation in Lovable Cloud."
+                  : "Video publishing is unavailable. Recheck the database connection."}{" "}
+                Your draft is saved on this device.
               </p>
             )}
             <div className="gc-admin-video-editor-actions">
