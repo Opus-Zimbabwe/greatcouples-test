@@ -135,6 +135,8 @@ export async function extractPoster(dataUrl: string, fetcher: typeof fetch = fet
   return {
     ...fields,
     title: uncertain ? "" : fields.title,
+    // Some model responses double-escape line breaks inside otherwise valid JSON.
+    body: fields.body.replace(/\\r\\n|\\n|\\r/g, "\n"),
     date_text: facts.date_text,
     location: facts.location,
     review_notes: [

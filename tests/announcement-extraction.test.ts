@@ -43,7 +43,17 @@ test("retains date, currency and paragraph formatting from a structured result",
       assert.equal(body.response_format.type, "json_object");
       return new Response(
         JSON.stringify({
-          choices: [{ message: { content: JSON.stringify(calls++ === 0 ? facts : expected) } }],
+          choices: [
+            {
+              message: {
+                content: JSON.stringify(
+                  calls++ === 0
+                    ? facts
+                    : { ...expected, body: expected.body.replace(/\n/g, "\\n") },
+                ),
+              },
+            },
+          ],
         }),
       );
     });
