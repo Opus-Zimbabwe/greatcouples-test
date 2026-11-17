@@ -1,0 +1,41 @@
+[
+  {
+    "name": "braai",
+    "path": "braai.png",
+    "words": [
+      "kingdom",
+      "marriages",
+      "braai"
+    ],
+    "uncertain": false
+  },
+  {
+    "name": "workshop",
+    "path": "workshop.png",
+    "words": [
+      "robot"
+    ],
+    "uncertain": false
+  },
+  {
+    "name": "series",
+    "path": "series.png",
+    "words": [
+      "money",
+      "matters"
+    ],
+    "uncertain": false
+  },
+  {
+    "name": "ambiguous",
+    "path": "ambiguous.png",
+    "words": [],
+    "uncertain": true
+  },
+  {
+    "name": "missing",
+    "path": "missing.png",
+    "words": [],
+    "uncertain": true
+  }
+]
