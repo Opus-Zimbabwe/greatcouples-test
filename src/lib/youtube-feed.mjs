@@ -3,11 +3,12 @@ const decode = value => value.replace(/^<!\[CDATA\[([\s\S]*)\]\]>$/, '$1').repla
 const tag = (xml, name) => decode(xml.match(new RegExp(`<${name}(?:\\s[^>]*)?>([\\s\\S]*?)</${name}>`))?.[1]?.trim() || '');
 export function parseYouTubeFeed(xml, channelId) {
   if (!/^UC[\w-]{22}$/.test(channelId)) throw new Error('Invalid YouTube channel ID');
-  if (tag(xml.split('<entry>')[0], 'yt:channelId') !== channelId) throw new Error('YouTube feed does not match the configured channel');
+  const ownsChannel = value => value === channelId || value === channelId.slice(2);
+  if (!ownsChannel(tag(xml.split('<entry>')[0], 'yt:channelId'))) throw new Error('YouTube feed does not match the configured channel');
   const seen = new Set();
   const videos = [...xml.matchAll(/<entry>([\s\S]*?)<\/entry>/g)].flatMap(([, entry]) => {
     const id = tag(entry, 'yt:videoId'); const title = tag(entry, 'title'); const publishedAt = tag(entry, 'published');
-    if (!/^[\w-]{11}$/.test(id) || !title || seen.has(id) || tag(entry,'yt:channelId') !== channelId || !Number.isFinite(Date.parse(publishedAt))) return [];
+    if (!/^[\w-]{11}$/.test(id) || !title || seen.has(id) || !ownsChannel(tag(entry,'yt:channelId')) || !Number.isFinite(Date.parse(publishedAt))) return [];
     seen.add(id); return [{id, platform:'youtube', title, publishedAt}];
   });
   if (!videos.length) throw new Error('YouTube returned no valid videos; retaining existing content');

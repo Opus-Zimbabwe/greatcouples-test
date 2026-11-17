@@ -99,3 +99,10 @@ export function mergeVideoEntries<
   }
   return [...map.values()].sort((a, b) => a.order - b.order).map((item) => item.clip);
 }
+
+export function videoStorageStatus(error: { code?: string } | null) {
+  if (!error) return "ready" as const;
+  return error.code === "PGRST205" || error.code === "42P01"
+    ? ("setup_required" as const)
+    : ("unavailable" as const);
+}

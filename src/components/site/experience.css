@@ -2351,3 +2351,6 @@
   background: linear-gradient(90deg, #61217d, #e91859);
   pointer-events: none;
 }
+
+.gc-media-preview-note { position:relative; z-index:1; margin:0; max-width:28ch; color:#f4e9f7; font-size:14px; line-height:1.5; font-weight:600; }
+.gc-playlist-image .gc-media-preview-note, .gc-filmstrip-track .gc-media-preview-note { display:none; }
